@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapQR - Cloud Image to QR</title>
+    <meta name="description" content="Upload an image and instantly generate a unique QR code to share it globally.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="nav-logo">
+                <span>SnapQR</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <header class="main-header">
+            <h1 class="brand-title">Snap<span>QR</span></h1>
+            <p class="brand-subtitle">Capturing moments, generating connections.</p>
+        </header>
+
+        <section class="mega-card-container">
+            <div class="mega-card glass">
+                <div id="drop-zone" class="drop-zone-new">
+                    <div class="dashed-box">
+                        <div class="box-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563eb"
+                                stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                        </div>
+                        <p class="box-text">Drop your image here<br><span>or click the options below</span></p>
+                    </div>
+
+                    <div class="action-grid">
+                        <button class="action-btn btn-photo" id="camera-btn">
+                            <div class="icon-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                    <circle cx="12" cy="13" r="4" />
+                                </svg>
+                            </div>
+                            <span>Take Photo</span>
+                        </button>
+                        <button class="action-btn btn-gallery" id="browse-btn">
+                            <div class="icon-circle">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                            </div>
+                            <span>Pick Gallery</span>
+                        </button>
+                    </div>
+
+                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg" hidden>
+                </div>
+
+                <div id="camera-section" class="camera-section hidden">
+                    <div class="camera-container">
+                        <video id="video" autoplay playsinline></video>
+                    </div>
+                    <div class="camera-controls">
+                        <button id="capture-btn" class="btn-primary">Capture Photo</button>
+                        <button id="cancel-camera" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="preview-section" class="preview-section hidden">
+                    <div class="preview-container-new clickable-preview">
+                        <img id="image-preview" src="#" alt="Preview">
+                        <button id="remove-img" class="btn-remove">×</button>
+                    </div>
+                    <button id="generate-btn" class="btn-primary full-width">Generate QR Code</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Result Overlay -->
+        <section id="result-overlay" class="result-overlay hidden">
+            <div class="result-card glass">
+                <button id="close-result" class="close-btn-new">×</button>
+                <h2 class="result-title">Your QR Code is Ready!</h2>
+
+                <div class="qr-preview-wrapper">
+                    <div class="qr-output" id="qr-output"></div>
+
+                    <div class="qr-customizer">
+                        <p>Customize Color</p>
+                        <div class="color-options">
+                            <button class="color-dot active" data-color="#2563eb" style="background: #2563eb;"></button>
+                            <button class="color-dot" data-color="#ec4899" style="background: #ec4899;"></button>
+                            <button class="color-dot" data-color="#10b981" style="background: #10b981;"></button>
+                            <button class="color-dot" data-color="#f59e0b" style="background: #f59e0b;"></button>
+                            <button class="color-dot" data-color="#ffffff" style="background: #ffffff;"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="result-actions vertical">
+                    <a id="download-qr" class="btn-primary" download="qrcode.png">Download QR</a>
+                    <div class="share-row">
+                        <button id="share-btn" class="btn-secondary">Copy Link</button>
+                        <button id="whatsapp-btn" class="btn-whatsapp">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.938 3.659 1.434 5.632 1.434h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="status-msg"><span id="image-url"></span></p>
+            </div>
+        </section>
+
+        <section id="history-section" class="history-section hidden">
+            <div class="history-header">
+                <h3>Recent Uploads</h3>
+                <button id="clear-history" class="text-btn">Clear All</button>
+            </div>
+            <div class="history-grid" id="history-grid"></div>
+        </section>
+
+        <div id="loader" class="loader-container hidden">
+            <div class="loader"></div>
+            <p>Processing...</p>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
