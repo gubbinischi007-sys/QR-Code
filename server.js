@@ -26,8 +26,12 @@ app.use('/uploads', express.static('uploads'));
 
 // Ensure local uploads directory exists (fallback for local dev)
 const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
+try {
+    if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir);
+    }
+} catch (err) {
+    console.log('Local uploads directory not created (likely Vercel environment)');
 }
 
 // Multer Config: Use memory storage for Cloudinary
