@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static('uploads'));
 
 // Ensure local uploads directory exists (fallback for local dev)
@@ -31,24 +31,14 @@ try {
         fs.mkdirSync(uploadDir);
     }
 } catch (err) {
-    console.log('Local uploads directory not created (likely Vercel environment)');
+    // Silent fail for read-only filesystems (Vercel)
 }
 
 // Multer Config: Use memory storage for Cloudinary
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-    fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png/;
-        const mimetype = filetypes.test(file.mimetype);
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimetype && extname) {
-            return cb(null, true);
-        }
-        cb(new Error('Only images (JPG, PNG) are allowed!'));
-    }
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 // Helper to upload buffer to Cloudinary
@@ -58,7 +48,7 @@ const uploadToCloudinary = (buffer) => {
             { folder: 'snapqr' },
             (error, result) => {
                 if (result) resolve(result.secure_url);
-                else reject(error);
+                else reject(error || new Error('Cloudinary upload failed'));
             }
         );
         streamifier.createReadStream(buffer).pipe(stream);
@@ -75,7 +65,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         let imageUrl;
 
         // Check if Cloudinary is configured
-        if (process.env.CLOUDINARY_CLOUD_NAME) {
+        if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
             // Upload to Cloudinary for permanent storage (Vercel)
             imageUrl = await uploadToCloudinary(req.file.buffer);
         } else {
@@ -98,24 +88,26 @@ app.post('/upload', upload.single('image'), async (req, res) => {
             quality: 0.92,
             margin: 1,
             scale: 10,
-            color: {
-                dark: '#0f172aff',
-                light: '#ffffffff'
-            }
+            color: { dark: '#0f172aff', light: '#ffffffff' }
         });
 
-        res.json({
-            imageUrl: imageUrl,
-            qrCode: qrCodeDataUrl
-        });
+        res.json({ imageUrl, qrCode: qrCodeDataUrl });
     } catch (err) {
-        console.error('Generation Error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Upload error:', err);
+        res.status(500).json({ error: err.message || 'Internal server error' });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+// Serve index.html for the root route if not caught by static
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Only start the server if running locally
+if (process.env.NODE_ENV !== 'production' && require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
